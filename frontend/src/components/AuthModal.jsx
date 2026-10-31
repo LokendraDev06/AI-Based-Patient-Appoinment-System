@@ -49,7 +49,7 @@ const GoogleIcon = () => (
 
 const API_BASE_URL = 'http://localhost:8000';
 
-export default function AuthModal({ onLoginSuccess }) {
+export default function AuthModal({ onLoginSuccess, onClose }) {
   const [authView, setAuthView] = useState('login'); // 'login' | 'signup' | 'google_screen'
   const [role, setRole] = useState('patient'); // 'patient' | 'doctor'
   const [authMode, setAuthMode] = useState('password'); // 'password' | 'otp'
@@ -347,6 +347,32 @@ export default function AuthModal({ onLoginSuccess }) {
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
       }}
     >
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '24px',
+            right: '32px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid #cbd5e1',
+            color: '#1e293b',
+            padding: '8px 18px',
+            borderRadius: '24px',
+            fontWeight: 700,
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.08)',
+            zIndex: 100
+          }}
+        >
+          ✕ Back to Website
+        </button>
+      )}
       <svg
         style={{ position: 'absolute', bottom: 0, left: 0, width: '100vw', height: '50vh', zIndex: 1, pointerEvents: 'none', opacity: 0.85 }}
         viewBox="0 0 1000 500"

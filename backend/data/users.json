@@ -121,5 +121,24 @@
     "created_at": 1792060594.4732916,
     "updated_at": 1792060594.4732933,
     "specialization": null
+  },
+  "lokenpraja0608@gmail.com": {
+    "id": "pat_8193ef3b",
+    "name": "Lokendra Prajapati",
+    "email": "lokenpraja0608@gmail.com",
+    "phone_number": "+919406652032",
+    "password_hash": "6b346faa6a6886d47991557f02d5eb3b03cdbe9bf1f41cbc823e795bc789079b$edc09c041f3fc084d5462d74f098975b",
+    "role": "patient",
+    "auth_provider": "email",
+    "age": 19,
+    "gender": "Not Specified",
+    "specialization": null,
+    "qualification": null,
+    "fee": null,
+    "location": null,
+    "is_active": true,
+    "created_at": 1793209811.9394596,
+    "updated_at": 1793209811.93946,
+    "avatar_url": null
   }
 }

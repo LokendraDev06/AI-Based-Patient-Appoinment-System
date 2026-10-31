@@ -1,284 +1,773 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import Navbar from './components/Navbar';
-import AuthModal from './components/AuthModal';
-import ChatbotDrawer from './components/ChatbotDrawer';
-import DoctorCard from './components/DoctorCard';
-import AppointmentModal from './components/AppointmentModal';
-import PatientDashboard from './components/PatientDashboard';
+import LandingPage from './components/LandingPage';
+import PatientPortal from './components/PatientPortal';
 import DoctorDashboard from './components/DoctorDashboard';
-import { Bot, Search, Sparkles, ShieldCheck } from 'lucide-react';
+import ParchaReaderView from './components/ParchaReaderView';
+import AuthModal from './components/AuthModal';
+import AppointmentModal from './components/AppointmentModal';
+import ChatbotDrawer from './components/ChatbotDrawer';
+import { listenToAppointments } from './supabase';
 
 const MOCK_DOCTORS = [
   {
-    id: "doc-gw-101",
-    name: "Dr. Deepankar Lahariya",
-    specialization: "General Physician",
-    qualification: "MBBS, MD (Internal Medicine) - 12 Yrs Exp",
-    clinic: "Lahariya Health Clinic",
-    rating: 4.8,
-    fee: 200,
-    location: "A-21, Basant Vihar Colony, Lashkar, Gwalior",
-    schedule: "Mon-Sat 9:30 AM - 8:00 PM, Sun 9:00 AM - 2:00 PM",
-    phone: "+91 77730 08203",
-    available_slots: ["09:30 AM", "11:30 AM", "04:30 PM", "07:00 PM"],
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-103",
+    "name": "Dr. Aditya Jain",
+    "specialization": "Cardiologist",
+    "qualification": "MD, DM (Cardiology)\n15+ Years Experience",
+    "clinic": "Aditya Jain Heart Clinic",
+    "rating": 4.8,
+    "reviews": 412,
+    "fee": 500,
+    "location": "Hospital Road, opp. old Parwar Hospital,\nLashkar, Gwalior",
+    "schedule": "Mon - Sat: 9:00 AM – 8:00 PM\nSun: 11:00 AM – 2:00 PM",
+    "phone": "+91 82260 21010",
+    "available_slots": [
+      "09:30 AM",
+      "11:30 AM",
+      "04:00 PM",
+      "06:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-102",
-    name: "Dr. Manish Sharma",
-    specialization: "General Physician",
-    qualification: "MBBS, MD (General Medicine) - 14 Yrs Exp",
-    clinic: "Shree Shyam Clinic",
-    rating: 4.85,
-    fee: 350,
-    location: "G.K. Tower, opp. Chandakya Hospital, Hospital Road, Gwalior",
-    schedule: "Afternoon 2:00 - 4:00 PM, Evening 7:00 - 8:30 PM",
-    phone: "+91 93417 27332",
-    available_slots: ["02:00 PM", "03:15 PM", "07:00 PM", "08:00 PM"],
-    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-104",
+    "name": "Dr. Gaurav Kavi Bhargava",
+    "specialization": "Cardiologist",
+    "qualification": "MD, DNB (Cardiology)\n12+ Years Experience",
+    "clinic": "Gaurav Heart Care Centre",
+    "rating": 4.7,
+    "reviews": 356,
+    "fee": 600,
+    "location": "Hospital Road, near Madhav Dispensary,\nLashkar, Gwalior",
+    "schedule": "Daily: 8:30 AM – 10:00 PM",
+    "phone": "+91 91799 83355",
+    "available_slots": [
+      "09:00 AM",
+      "12:00 PM",
+      "05:00 PM",
+      "07:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-103",
-    name: "Dr. Aditya Jain",
-    specialization: "Cardiologist",
-    qualification: "MD, DM (Cardiology) - Senior Interventional Cardiologist",
-    clinic: "Aditya Jain Heart Clinic",
-    rating: 4.9,
-    fee: 500,
-    location: "Hospital Road, opp. old Pariwar Hospital, Geeta Colony, Lashkar, Gwalior",
-    schedule: "Mon-Sat 9:00 AM - 8:00 PM, Sun 11:00 AM - 8:00 PM",
-    phone: "+91 82260 21010",
-    available_slots: ["09:30 AM", "11:30 AM", "04:00 PM", "06:30 PM"],
-    avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-105-p",
+    "name": "Dr. Priya Sharma",
+    "specialization": "Dermatologist",
+    "qualification": "MD (Dermatology)\n8+ Years Experience",
+    "clinic": "Skin & Hair Care Clinic",
+    "rating": 4.6,
+    "reviews": 298,
+    "fee": 700,
+    "location": "Thatipur, Gwalior, M.P.",
+    "schedule": "Mon - Sat: 10:00 AM – 7:00 PM\nSun: 10:00 AM – 1:00 PM",
+    "phone": "+91 84510 73004",
+    "available_slots": [
+      "10:00 AM",
+      "01:30 PM",
+      "04:30 PM",
+      "06:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-104",
-    name: "Dr. Gaurav Kavi Bhargava",
-    specialization: "Cardiologist",
-    qualification: "MD, DNB (Cardiology) - Heart Care Specialist",
-    clinic: "Gaurav Heart Care Centre",
-    rating: 4.9,
-    fee: 600,
-    location: "Hospital Road, opp. Nariyo Mandir, near Madhav Dispensary, Lashkar, Gwalior",
-    schedule: "Daily 8:30 AM - 10:00 PM",
-    phone: "+91 91799 83355",
-    available_slots: ["09:00 AM", "12:00 PM", "05:00 PM", "07:30 PM"],
-    avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-111",
+    "name": "Dr. Rohan Mehta",
+    "specialization": "Orthopedist",
+    "qualification": "MS (Orthopedics)\n10+ Years Experience",
+    "clinic": "Mehta Bone & Joint Clinic",
+    "rating": 4.5,
+    "reviews": 261,
+    "fee": 500,
+    "location": "City Centre, Gwalior, M.P.",
+    "schedule": "Mon - Sat: 10:30 AM – 7:30 PM",
+    "phone": "+91 98765 11223",
+    "available_slots": [
+      "10:30 AM",
+      "01:15 PM",
+      "05:00 PM",
+      "07:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-105",
-    name: "Dr. Kamal Bhadoria",
-    specialization: "Dermatologist",
-    qualification: "MD, DVD (Dermatology & Cosmetology) - Skin Specialist",
-    clinic: "Foreman Skin Clinic",
-    rating: 4.75,
-    fee: 500,
-    location: "2nd Floor, Parimal Complex, opp. Indian Oil Petrol Pump, Chetakpuri, Gwalior",
-    schedule: "Mon-Sat 3:00 - 8:00 PM, Sun 11:00 AM - 4:00 PM",
-    phone: "+91 84510 73004",
-    available_slots: ["03:00 PM", "04:30 PM", "06:00 PM", "07:30 PM"],
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-101",
+    "name": "Dr. Deepankar Lahariya",
+    "specialization": "General Physician",
+    "qualification": "MBBS, MD (Internal Medicine)\n12+ Years Experience",
+    "clinic": "Lahariya Health Clinic",
+    "rating": 4.85,
+    "reviews": 242,
+    "fee": 400,
+    "location": "A-21, Basant Vihar Colony, Lashkar, Gwalior",
+    "schedule": "Mon–Sat, 9:00 AM–8:00 PM; Sun 9:00 AM–2:00 PM",
+    "phone": "+91 77730 08203",
+    "available_slots": [
+      "09:30 AM",
+      "11:30 AM",
+      "04:30 PM",
+      "07:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-106",
-    name: "Dr. Charul Agrawal",
-    specialization: "Dermatologist",
-    qualification: "MD (Dermatology & Aesthetic Medicine) - Skin & Hair Specialist",
-    clinic: "Sidra Derma Solutions",
-    rating: 4.85,
-    fee: 500,
-    location: "Near Sanskar Garden, Chetakpuri, Lashkar, Gwalior",
-    schedule: "Mon-Sat 10:00 AM - 2:00 PM & 5:00 - 8:00 PM, Sun 12:00 - 7:00 PM",
-    phone: "+91 99700 46403",
-    available_slots: ["10:30 AM", "01:00 PM", "05:30 PM", "07:15 PM"],
-    avatar: "https://images.unsplash.com/photo-1594824813566-88855ce78c4a?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-parmar",
+    "name": "Dr. Anvesh Parmar",
+    "specialization": "Nephrologist",
+    "qualification": "MBBS, MD, DM (Nephrology)\nRenal Specialist",
+    "clinic": "Dr Parmar Clinic",
+    "rating": 4.85,
+    "reviews": 174,
+    "fee": 700,
+    "location": "Gwalior Residency, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 6:00 PM",
+    "phone": "+91 75124 88990",
+    "available_slots": [
+      "10:30 AM",
+      "01:00 PM",
+      "03:30 PM",
+      "05:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-107",
-    name: "Dr. Archana Gupta",
-    specialization: "Pediatrician",
-    qualification: "MBBS, DCH, MD (Pediatrics) - Child Specialist",
-    clinic: "Archana Health Care",
-    rating: 4.8,
-    fee: 350,
-    location: "Gwalior City, Gwalior",
-    schedule: "Listed OPD: 9:00 AM - 12:30 PM",
-    phone: "+91 75124 56789",
-    available_slots: ["09:00 AM", "10:15 AM", "11:30 AM", "12:15 PM"],
-    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-salil",
+    "name": "Dr. Akshat Salil",
+    "specialization": "Homoeopath",
+    "qualification": "BHMS, MD (Homeopathy)\nHolistic Healing Specialist",
+    "clinic": "Dr. Jagdish Salil Memorial Homeo Healing Chamber",
+    "rating": 4.75,
+    "reviews": 112,
+    "fee": 500,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sat, 11:00 AM–1:00 PM",
+    "phone": "+91 75125 44332",
+    "available_slots": [
+      "11:00 AM",
+      "11:30 AM",
+      "12:00 PM",
+      "12:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-108",
-    name: "Dr. Manoj Bansal",
-    specialization: "Pediatrician",
-    qualification: "MBBS, MD (Pediatrics) - Newborn & Child Care",
-    clinic: "Samarth Women and Child Health Center",
-    rating: 4.75,
-    fee: 200,
-    location: "Gwalior City, Gwalior",
-    schedule: "Evening OPD: 6:00 - 9:00 PM",
-    phone: "+91 75123 45678",
-    available_slots: ["06:00 PM", "07:00 PM", "08:00 PM", "08:45 PM"],
-    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-satpute",
+    "name": "Dr. Jitendra Satpute",
+    "specialization": "General Physician",
+    "qualification": "MBBS, MD (Internal Medicine)\nDiabetology Consultant",
+    "clinic": "Dr. Aditya Jain Heart Clinic",
+    "rating": 4.8,
+    "reviews": 198,
+    "fee": 300,
+    "location": "Gwalior City, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 2:00 PM & 6:00 – 8:00 PM",
+    "phone": "+91 82260 21015",
+    "available_slots": [
+      "10:30 AM",
+      "12:30 PM",
+      "06:15 PM",
+      "07:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-109",
-    name: "Dr. Vijay Gupta",
-    specialization: "Pediatrician",
-    qualification: "MD (Pediatrics), Fellowship in Neonatology - Child Specialist",
-    clinic: "Shri Narayanam Child Care",
-    rating: 4.9,
-    fee: 400,
-    location: "Behind Roshni Ghar Rd, near Ved Mantra Hotel, Jayendraganj, Lashkar, Gwalior",
-    schedule: "Mon-Wed, Fri-Sat 12:30 - 2:45 PM & 5:00 - 6:15 PM, Sun 1:00 - 3:00 PM",
-    phone: "+91 75126 12345",
-    available_slots: ["12:45 PM", "02:00 PM", "05:15 PM", "06:00 PM"],
-    avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-alind",
+    "name": "Dr. Alind Kumar Jain",
+    "specialization": "Ayurveda",
+    "qualification": "BAMS, MD (Ayurveda)\nSenior Ayurvedic Consultant",
+    "clinic": "Jiva Ayurveda",
+    "rating": 4.7,
+    "reviews": 145,
+    "fee": 299,
+    "location": "Tulsi Vihar Colony, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 7:00 PM",
+    "phone": "+91 75126 77889",
+    "available_slots": [
+      "10:00 AM",
+      "01:30 PM",
+      "04:00 PM",
+      "06:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-110",
-    name: "Dr. Navneet Dhakar",
-    specialization: "Urologist",
-    qualification: "MS (General Surgery), MCh (Urology) - Kidney & Uro Specialist",
-    clinic: "Dhakar Hospital & Urology Centre",
-    rating: 4.8,
-    fee: 400,
-    location: "Madhav Ganj, Gwalior",
-    schedule: "Mon-Sat 10:00 AM - 4:00 PM (Hospital 24x7)",
-    phone: "+91 75128 90123",
-    available_slots: ["10:30 AM", "12:00 PM", "02:30 PM", "03:45 PM"],
-    avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-rakhi",
+    "name": "Dr. Rakhi Sharma",
+    "specialization": "Homoeopath",
+    "qualification": "BHMS (Homeopathy)\nChronic Disease Consultant",
+    "clinic": "Dr Batra's Positive Health Clinic",
+    "rating": 4.65,
+    "reviews": 88,
+    "fee": 499,
+    "location": "Lalitpur Colony, Gwalior",
+    "schedule": "Mon - Sat: 11:00 AM – 8:00 PM",
+    "phone": "+91 75127 11223",
+    "available_slots": [
+      "11:30 AM",
+      "02:00 PM",
+      "04:30 PM",
+      "07:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1594824813566-88855ce78c4a?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-111",
-    name: "Dr. Pritesh Jain",
-    specialization: "Urologist",
-    qualification: "MS, MCh (Urology) - Senior Urosurgeon",
-    clinic: "Kailash Superspeciality Hospital",
-    rating: 4.95,
-    fee: 1000,
-    location: "Rampua / Lashkar, Gwalior",
-    schedule: "Morning OPD: 11:00 AM - 1:00 PM",
-    phone: "+91 75129 87654",
-    available_slots: ["11:00 AM", "11:45 AM", "12:30 PM", "01:00 PM"],
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-saurabh",
+    "name": "Dr. Saurabh Kalra",
+    "specialization": "Homoeopath",
+    "qualification": "BHMS, MD (Homeo)\nSenior Homeopathy Consultant",
+    "clinic": "Dr Batra's Positive Health Clinic",
+    "rating": 4.7,
+    "reviews": 94,
+    "fee": 499,
+    "location": "Lalitpur Colony, Gwalior",
+    "schedule": "Mon - Sat: 11:00 AM – 8:00 PM",
+    "phone": "+91 75127 11224",
+    "available_slots": [
+      "11:00 AM",
+      "01:15 PM",
+      "05:00 PM",
+      "07:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-112",
-    name: "Dr. Sanjay Goyal",
-    specialization: "Orthopedist",
-    qualification: "MS (Orthopedics), Joint Replacement Specialist",
-    clinic: "Apollo Spectra Hospitals (On Call)",
-    rating: 4.85,
-    fee: 450,
-    location: "Vikas Nagar, Gwalior",
-    schedule: "Appointment Window: 10:00 AM - 5:00 PM",
-    phone: "+91 75124 11223",
-    available_slots: ["10:00 AM", "12:30 PM", "02:30 PM", "04:30 PM"],
-    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-garg",
+    "name": "Dr. Vijay Garg",
+    "specialization": "General Physician",
+    "qualification": "MBBS, General Medicine\nFamily Healthcare Specialist",
+    "clinic": "Swastik Medi Clinic",
+    "rating": 4.6,
+    "reviews": 160,
+    "fee": 150,
+    "location": "Tansen Nagar, Gwalior",
+    "schedule": "Mon - Sat: 9:30 AM – 1:30 PM & 5:30 – 8:30 PM",
+    "phone": "+91 75128 33441",
+    "available_slots": [
+      "10:00 AM",
+      "12:00 PM",
+      "06:00 PM",
+      "07:45 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-113",
-    name: "Dr. Himanshu Kushwah",
-    specialization: "Orthopedist",
-    qualification: "MBBS, MS (Orthopedics) - Spine & Joint Care",
-    clinic: "Kushwah Hospital",
-    rating: 4.75,
-    fee: 300,
-    location: "Deen Dayal Nagar, Gwalior",
-    schedule: "Listed Clinic Window: 9:00 AM - 9:00 PM",
-    phone: "+91 75125 33445",
-    available_slots: ["10:00 AM", "01:00 PM", "04:00 PM", "07:00 PM"],
-    avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-naresh",
+    "name": "Dr. Naresh Sharma",
+    "specialization": "General Physician",
+    "qualification": "MBBS, MD (General Medicine)\nEmergency & Cardiac Physician",
+    "clinic": "KMH & GH – Kusum Memorial Heart & General Hospital",
+    "rating": 4.8,
+    "reviews": 215,
+    "fee": 300,
+    "location": "Vinay Nagar, Gwalior",
+    "schedule": "Daily: 9:00 AM – 2:00 PM & 5:00 – 9:00 PM",
+    "phone": "+91 75129 55662",
+    "available_slots": [
+      "09:30 AM",
+      "11:45 AM",
+      "05:30 PM",
+      "08:15 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-114",
-    name: "Dr. Swati Agrawal",
-    specialization: "Gynecologist",
-    qualification: "MBBS, MS (Obstetrics & Gynecology) - Women Health Specialist",
-    clinic: "Diabetes, Obesity and Thyroid Centre",
-    rating: 4.8,
-    fee: 200,
-    location: "Lalitpur Colony, Gwalior",
-    schedule: "Clinic Window: 9:00 AM - 2:00 PM",
-    phone: "+91 75127 55667",
-    available_slots: ["09:30 AM", "11:00 AM", "12:30 PM", "01:30 PM"],
-    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-archana",
+    "name": "Dr. Archana Gupta",
+    "specialization": "Pediatrician",
+    "qualification": "MBBS, DCH, MD (Pediatrics & Internal Medicine)",
+    "clinic": "Sanjeevan Chikitsalya",
+    "rating": 4.85,
+    "reviews": 310,
+    "fee": 500,
+    "location": "Madhav Nagar, Gwalior",
+    "schedule": "Mon - Sat: 9:00 AM – 1:00 PM & 5:00 – 8:00 PM",
+    "phone": "+91 75124 56789",
+    "available_slots": [
+      "09:30 AM",
+      "11:15 AM",
+      "05:15 PM",
+      "07:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-115",
-    name: "Dr. Rita Johri",
-    specialization: "Gynecologist",
-    qualification: "MBBS, DGO, MD (Gynecology & Obstetrics)",
-    clinic: "Deepak Johri Nursing Home",
-    rating: 4.7,
-    fee: 300,
-    location: "Naya Bazar, Gwalior",
-    schedule: "Mon-Sat 10:00 AM - 2:00 PM & 5:00 - 8:00 PM",
-    phone: "+91 75123 66778",
-    available_slots: ["10:30 AM", "01:00 PM", "05:30 PM", "07:30 PM"],
-    avatar: "https://images.unsplash.com/photo-1594824813566-88855ce78c4a?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-parag",
+    "name": "Dr. Parag Srivastava",
+    "specialization": "Pediatrician",
+    "qualification": "MBBS, DCH\nChild Healthcare Specialist",
+    "clinic": "Dr. Parag Srivastava Clinic",
+    "rating": 4.7,
+    "reviews": 185,
+    "fee": 200,
+    "location": "Thatipur, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 1:30 PM & 6:00 – 8:30 PM",
+    "phone": "+91 75123 77884",
+    "available_slots": [
+      "10:15 AM",
+      "12:30 PM",
+      "06:30 PM",
+      "08:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
   },
   {
-    id: "doc-gw-116",
-    name: "Hansraj Memorial Hospital OPD",
-    specialization: "General Physician",
-    qualification: "Multispecialty Senior Consultants & Emergency Physicians",
-    clinic: "Hansraj Memorial Hospital",
-    rating: 4.75,
-    fee: 250,
-    location: "37-38, Sector 2, Vinay Nagar, Gwalior",
-    schedule: "Mon-Sat: 9:00 AM - 1:00 PM & 5:00 - 9:00 PM (Sunday Closed)",
-    phone: "0751-2481102, 0751-2480979",
-    available_slots: ["09:30 AM", "11:30 AM", "05:30 PM", "08:00 PM"],
-    avatar: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=150&auto=format&fit=crop&q=80"
+    "id": "doc-gw-iesha",
+    "name": "Dr. Iesha Mahajan",
+    "specialization": "Gynecologist",
+    "qualification": "MBBS, MS (Obstetrics & Gynecology)\nWomen Wellness Specialist",
+    "clinic": "Maatri Clinic",
+    "rating": 4.9,
+    "reviews": 275,
+    "fee": 500,
+    "location": "Vinay Nagar, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 2:00 PM & 5:00 – 8:00 PM",
+    "phone": "+91 75126 99001",
+    "available_slots": [
+      "10:00 AM",
+      "12:15 PM",
+      "05:30 PM",
+      "07:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1594824813566-88855ce78c4a?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-manish",
+    "name": "Dr. Manish Sharma",
+    "specialization": "General Physician",
+    "qualification": "MBBS, MD (General Medicine)\nInternal Medicine Consultant",
+    "clinic": "Dr. Manish Sharma Clinic",
+    "rating": 4.8,
+    "reviews": 220,
+    "fee": 200,
+    "location": "Thatipur, Gwalior",
+    "schedule": "Mon–Sat: 2:00 PM–4:00 PM & 7:00–8:30 PM",
+    "phone": "+91 93417 27332",
+    "available_slots": [
+      "02:00 PM",
+      "03:15 PM",
+      "07:00 PM",
+      "08:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-ashutosh-dentist",
+    "name": "Dr. Ashutosh Sharma",
+    "specialization": "Dentist",
+    "qualification": "BDS, MDS\nDental Surgeon & Implantologist",
+    "clinic": "Khurasiya Dental Care Centre",
+    "rating": 4.75,
+    "reviews": 140,
+    "fee": 300,
+    "location": "Thatipur, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 2:00 PM & 5:00 – 9:00 PM",
+    "phone": "+91 75122 33445",
+    "available_slots": [
+      "10:30 AM",
+      "01:00 PM",
+      "05:30 PM",
+      "07:45 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-sonali-dentist",
+    "name": "Dr. Sonali Kalra",
+    "specialization": "Dentist",
+    "qualification": "BDS, Cosmetic Dentistry Specialist",
+    "clinic": "Dr Kalras' Dental and Smile Care",
+    "rating": 4.8,
+    "reviews": 165,
+    "fee": 400,
+    "location": "Saraswati Nagar, Gwalior",
+    "schedule": "Mon - Sat: 10:30 AM – 2:30 PM & 5:30 – 8:30 PM",
+    "phone": "+91 75124 11332",
+    "available_slots": [
+      "11:00 AM",
+      "01:30 PM",
+      "06:00 PM",
+      "08:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-manav-eye",
+    "name": "Dr. Manav Setiya",
+    "specialization": "Ophthalmologist",
+    "qualification": "MBBS, MS (Ophthalmology)\nEye Surgeon & Lasik Specialist",
+    "clinic": "Jeevan Jyoti Netralaya",
+    "rating": 4.9,
+    "reviews": 340,
+    "fee": 300,
+    "location": "Gwalior City, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 6:00 PM",
+    "phone": "+91 75128 44556",
+    "available_slots": [
+      "10:15 AM",
+      "12:45 PM",
+      "03:30 PM",
+      "05:15 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-nitin-dentist",
+    "name": "Dr. Nitin Sharma",
+    "specialization": "Dentist",
+    "qualification": "BDS, MDS (Orthodontics & Dentofacial Orthopedics)",
+    "clinic": "Harmony Dental Clinic",
+    "rating": 4.75,
+    "reviews": 110,
+    "fee": 400,
+    "location": "Gwalior City, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 2:00 PM & 5:00 – 8:30 PM",
+    "phone": "+91 75125 99887",
+    "available_slots": [
+      "10:30 AM",
+      "01:00 PM",
+      "05:30 PM",
+      "07:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-bhuwanesh",
+    "name": "Dr. Bhuwanesh Sharma",
+    "specialization": "Dentist",
+    "qualification": "BDS, General & Aesthetic Dentistry",
+    "clinic": "Om Dental & ENT Clinic",
+    "rating": 4.65,
+    "reviews": 85,
+    "fee": 200,
+    "location": "Govindpuri, Gwalior",
+    "schedule": "Mon - Sat: 10:00 AM – 2:00 PM & 5:00 – 8:30 PM",
+    "phone": "+91 75123 66554",
+    "available_slots": [
+      "10:00 AM",
+      "12:30 PM",
+      "05:00 PM",
+      "07:15 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-pratap",
+    "name": "Dr. Pratap Singh Chauhan",
+    "specialization": "General Physician",
+    "qualification": "MBBS, MD (Medicine)\nDiabetology & Metabolic Care",
+    "clinic": "Chauhan Healthcare Clinic",
+    "rating": 4.7,
+    "reviews": 130,
+    "fee": 300,
+    "location": "Morar, Gwalior",
+    "schedule": "Mon - Sat: 9:00 AM – 1:00 PM & 5:00 – 8:30 PM",
+    "phone": "+91 75129 11223",
+    "available_slots": [
+      "09:30 AM",
+      "11:45 AM",
+      "05:30 PM",
+      "07:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-santosh",
+    "name": "Dr. Santosh Singhal",
+    "specialization": "General Physician",
+    "qualification": "MBBS, Senior General Physician",
+    "clinic": "Sparsh Health Care",
+    "rating": 4.75,
+    "reviews": 145,
+    "fee": 300,
+    "location": "Morar, Gwalior",
+    "schedule": "Mon - Sat: 9:30 AM – 1:30 PM & 6:00 – 9:00 PM",
+    "phone": "+91 75126 44332",
+    "available_slots": [
+      "10:00 AM",
+      "12:15 PM",
+      "06:30 PM",
+      "08:15 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-hschauhan",
+    "name": "Dr. H. S. Chauhan",
+    "specialization": "General Physician",
+    "qualification": "MBBS, MD (Medicine)\nCardiometabolic & Maternity Consultant",
+    "clinic": "Dr. Chauhan Medical and Heart Care & Maternity Clinic",
+    "rating": 4.8,
+    "reviews": 190,
+    "fee": 300,
+    "location": "Lashkar City, Gwalior",
+    "schedule": "Mon - Sat: 9:00 AM – 2:00 PM & 5:30 – 8:30 PM",
+    "phone": "+91 75124 99001",
+    "available_slots": [
+      "09:30 AM",
+      "12:00 PM",
+      "06:00 PM",
+      "08:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-ramveer",
+    "name": "Dr. Ramveer Singh Rajput",
+    "specialization": "General Physician",
+    "qualification": "MBBS, MD (Internal Medicine)\nApollo Spectra Consultant",
+    "clinic": "Apollo Spectra Hospitals",
+    "rating": 4.9,
+    "reviews": 310,
+    "fee": 700,
+    "location": "Gwalior City, Gwalior",
+    "schedule": "Mon–Sat, 10:00 AM–6:00 PM",
+    "phone": "+91 75124 11223",
+    "available_slots": [
+      "10:00 AM",
+      "12:30 PM",
+      "03:00 PM",
+      "05:15 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-manoj-pulmo",
+    "name": "Dr. Manoj Kumar Srivastava",
+    "specialization": "Pulmonologist",
+    "qualification": "MBBS, MD, DTCD (Pulmonary Medicine)\nChest & Respiratory Specialist",
+    "clinic": "RJN Apollo Spectra Hospital",
+    "rating": 4.9,
+    "reviews": 290,
+    "fee": 700,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sat, 10:00 AM–6:00 PM",
+    "phone": "+91 75124 88771",
+    "available_slots": [
+      "10:30 AM",
+      "01:00 PM",
+      "03:30 PM",
+      "05:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-khozema",
+    "name": "Dr. Khozema Saify",
+    "specialization": "Dermatologist",
+    "qualification": "MBBS, MD (Dermatology, Venereology & Leprosy)",
+    "clinic": "RJN Apollo Spectra Hospital",
+    "rating": 4.85,
+    "reviews": 240,
+    "fee": 700,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sat, 5:00 PM–8:00 PM",
+    "phone": "+91 75124 88772",
+    "available_slots": [
+      "05:00 PM",
+      "06:00 PM",
+      "07:00 PM",
+      "07:45 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-deepanshu-ent",
+    "name": "Dr. Deepanshu Singhal",
+    "specialization": "ENT",
+    "qualification": "MBBS, MS (ENT / Otorhinolaryngology)\nEar Nose Throat Surgeon",
+    "clinic": "RJN Apollo Spectra Hospital",
+    "rating": 4.8,
+    "reviews": 180,
+    "fee": 500,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sat, 5:00 PM–6:00 PM",
+    "phone": "+91 75124 88773",
+    "available_slots": [
+      "05:00 PM",
+      "05:20 PM",
+      "05:40 PM",
+      "06:00 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-rachna",
+    "name": "Dr. Rachna Dogra",
+    "specialization": "Gynecologist",
+    "qualification": "MBBS, MS (Obstetrics & Gynecology)\nSenior Consultant Gynae",
+    "clinic": "RJN Apollo Spectra Hospital",
+    "rating": 4.9,
+    "reviews": 320,
+    "fee": 700,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sat, 10:00 AM–3:00 PM",
+    "phone": "+91 75124 88774",
+    "available_slots": [
+      "10:30 AM",
+      "12:00 PM",
+      "01:30 PM",
+      "02:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-sudhir-dixit",
+    "name": "Dr. Sudhir Dixit",
+    "specialization": "Pediatrician",
+    "qualification": "MBBS, MD (Pediatrics)\nChild & Adolescent Specialist",
+    "clinic": "RJN Apollo Spectra Hospital",
+    "rating": 4.75,
+    "reviews": 195,
+    "fee": 300,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sat: 11:00 AM–2:00 PM (On Call 24x7)",
+    "phone": "+91 75124 88775",
+    "available_slots": [
+      "11:00 AM",
+      "12:00 PM",
+      "01:00 PM",
+      "01:45 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-ujjawal",
+    "name": "Dr. Ujjawal Sharma",
+    "specialization": "Pulmonologist",
+    "qualification": "MBBS, MD (Chest & Respiratory Medicine)",
+    "clinic": "RJN Apollo Spectra Hospital",
+    "rating": 4.8,
+    "reviews": 175,
+    "fee": 600,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sun, 10:00 AM–4:00 PM",
+    "phone": "+91 75124 88776",
+    "available_slots": [
+      "10:30 AM",
+      "01:00 PM",
+      "02:30 PM",
+      "03:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-pravesh-uro",
+    "name": "Dr. Pravesh Gupta",
+    "specialization": "Urologist",
+    "qualification": "MS (Surgery), MCh (Urology)\nSenior Urologist",
+    "clinic": "RJN Apollo Spectra Hospital",
+    "rating": 4.85,
+    "reviews": 230,
+    "fee": 300,
+    "location": "Lashkar, Gwalior",
+    "schedule": "Mon–Sat, 10:00 AM–2:00 PM",
+    "phone": "+91 75124 88777",
+    "available_slots": [
+      "10:15 AM",
+      "11:30 AM",
+      "12:45 PM",
+      "01:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "doc-gw-kamal",
+    "name": "Dr. Kamal Bhadoria",
+    "specialization": "Dermatologist",
+    "qualification": "MBBS, MD (Dermatology)\nSkin & Laser Aesthetics",
+    "clinic": "Fortmax Skin Clinic / JPM Dermatech",
+    "rating": 4.8,
+    "reviews": 260,
+    "fee": 500,
+    "location": "Chetakpuri, Gwalior",
+    "schedule": "Mon–Sat, 3:00 PM–8:00 PM; Sun 11:00 AM–4:00 PM",
+    "phone": "+91 75124 99112",
+    "available_slots": [
+      "03:30 PM",
+      "05:00 PM",
+      "06:30 PM",
+      "07:30 PM"
+    ],
+    "avatar": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80"
   }
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState('home'); // 'home' | 'patient' | 'doctor' | 'ai_parcha'
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  
-  // App User & View States (Starts directly with Login page if not authenticated)
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const [doctors, setDoctors] = useState(MOCK_DOCTORS);
-  const [selectedSpecialist, setSelectedSpecialist] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState(null);
 
+  // Auto-restore session from localStorage if available
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('medicare_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [doctors, setDoctors] = useState(MOCK_DOCTORS);
   const [appointments, setAppointments] = useState([
     {
       id: "apt-901",
-      patient_id: "pat-001",
-      patient_name: "Rohan Das",
-      patient_age: 28,
-      doctor_id: "doc-gw-101",
+      token: "01",
+      patient_name: "Lokendra Dev",
       doctor_name: "Dr. Deepankar Lahariya",
       specialization: "General Physician",
       date: new Date().toISOString().split('T')[0],
       slot: "11:30 AM",
-      status: "Confirmed",
-      symptoms: "Seasonal viral fever, body ache and fatigue",
-      ai_summary: "Patient reports fever & fatigue. Preliminary Assessment: Viral Infection. Recommended General Physician."
+      status: "Waiting",
+      clinic: "City Care Hospital, Gwalior",
+      symptoms: "High viral fever, severe sore throat, body ache and persistent dry cough since 2 days",
+      ai_summary: "Acute febrile illness with pharyngeal erythema. Moderate risk. Suggested: CBC & Dengue NS1 serology. Prescribe antipyretics and warm saline gargles."
+    },
+    {
+      id: "apt-902",
+      token: "02",
+      patient_name: "Lokendra Dev",
+      doctor_name: "Dr. Deepankar Lahariya",
+      specialization: "General Physician",
+      date: new Date().toISOString().split('T')[0],
+      slot: "12:00 PM",
+      status: "Waiting",
+      clinic: "City Care Hospital, Gwalior",
+      symptoms: "Routine thyroid review, mild generalized lethargy and morning sluggishness",
+      ai_summary: "Subclinical hypothyroid follow-up. Prior TSH 5.2 mIU/L on Thyroxine 50mcg. Advise repeat serum TSH in 8 weeks; maintain dose if asymptomatic."
+    },
+    {
+      id: "apt-903",
+      token: "03",
+      patient_name: "Lokendra Dev",
+      doctor_name: "Dr. Deepankar Lahariya",
+      specialization: "General Physician",
+      date: new Date().toISOString().split('T')[0],
+      slot: "12:30 PM",
+      status: "Waiting",
+      clinic: "City Care Hospital, Gwalior",
+      symptoms: "Sudden retrosternal chest heaviness, diaphoresis and breathlessness during brisk morning walk",
+      ai_summary: "🚨 CRITICAL TRIAGE ALERT: Possible Acute Coronary Syndrome (ACS) or Unstable Angina. Immediate 12-lead ECG, Troponin-I, Sorbitrate SOS advised."
     }
   ]);
 
+  // Fetch backend doctors if live
   useEffect(() => {
     fetch('http://localhost:8000/api/doctors')
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setDoctors(data);
-        }
+        if (Array.isArray(data) && data.length > 0) setDoctors(data);
       })
-      .catch(err => console.log("Backend offline, rendering client mock database."));
+      .catch(() => console.log("Backend offline, using mock doctors database."));
   }, []);
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
-    setIsLoggedIn(true);
+    try {
+      localStorage.setItem('medicare_current_user', JSON.stringify(user));
+    } catch {}
+    setIsAuthModalOpen(false);
     if (user.role === 'doctor') {
       setActiveTab('doctor');
     } else {
@@ -287,153 +776,206 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    try {
+      localStorage.removeItem('medicare_current_user');
+      localStorage.removeItem('medicare_access_token');
+    } catch {}
     setCurrentUser(null);
-    setIsLoggedIn(false);
     setActiveTab('home');
   };
 
-  const handleRecommendSpecialist = (spec) => {
-    setSelectedSpecialist(spec);
-    setActiveTab('home');
-  };
+  // Real-time Cloud Firestore synchronization
+  useEffect(() => {
+    const unsubscribe = listenToAppointments((cloudApts) => {
+      if (cloudApts && cloudApts.length > 0) {
+        setAppointments(prev => {
+          const cloudIds = new Set(cloudApts.map(a => a.id));
+          const localOnly = prev.filter(a => !cloudIds.has(a.id) && String(a.id).startsWith("apt-90"));
+          return [...cloudApts, ...localOnly];
+        });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Role-based route guard: Never allow patient to access doctor dashboard
+  useEffect(() => {
+    if (currentUser?.role === 'patient' && activeTab === 'doctor') {
+      setActiveTab('patient');
+    } else if (currentUser?.role === 'doctor' && activeTab === 'patient') {
+      setActiveTab('doctor');
+    }
+  }, [currentUser, activeTab]);
 
   const handleBookingSuccess = (newAppointment) => {
-    setAppointments(prev => [newAppointment, ...prev]);
+    const enrichedApt = {
+      ...newAppointment,
+      status: newAppointment.status || "Pending",
+      ai_summary: newAppointment.ai_summary || "Preliminary triage complete. Doctor review pending."
+    };
+    setAppointments(prev => [enrichedApt, ...prev.filter(a => a.id !== enrichedApt.id)]);
     setSelectedDoctorForBooking(null);
     setActiveTab('patient');
   };
 
-  const filteredDoctors = doctors.filter(doc => {
-    const matchesSpec = selectedSpecialist ? doc.specialization.toLowerCase().includes(selectedSpecialist.toLowerCase()) : true;
-    const matchesSearch = searchTerm ? (
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.location.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : true;
-    return matchesSpec && matchesSearch;
-  });
-
-  // SCREEN 1: DIRECT 1:1 MEDICARE LOGIN PAGE (WHEN NOT LOGGED IN)
-  if (!isLoggedIn || !currentUser) {
-    return <AuthModal onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  // SCREEN 2: LOGGED IN APPLICATION PORTAL
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* 1. Global Navbar matching all screenshots */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenChat={() => setIsChatOpen(true)}
-        currentUser={currentUser}
-        onOpenAuth={() => setIsLoggedIn(false)}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
+        currentUser={currentUser}
       />
 
-      {/* Main Content */}
-      {activeTab === 'home' && (
-        <div className="container" style={{ flex: 1 }}>
-          <div className="hero">
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(37, 99, 235, 0.08)', border: '1px solid rgba(37, 99, 235, 0.2)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.82rem', color: '#2563eb', marginBottom: '16px', fontWeight: 600 }}>
-                <Sparkles size={14} /> AI-Powered Health Triage & Doctor Matching
-              </div>
-              <h1 className="hero-title">
-                Smart Healthcare <br /><span style={{ color: '#2563eb' }}>Instant Doctor Booking</span>
-              </h1>
-              <p className="hero-subtitle">
-                Describe your symptoms to our 24/7 AI Chatbot. Get matched with top verified specialists and book real-time appointments without waiting in queues.
-              </p>
-              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-                <button className="btn-primary" onClick={() => setIsChatOpen(true)}>
-                  <Bot size={18} /> Start AI Symptom Check
-                </button>
-              </div>
-            </div>
+      {/* 2. Main Page Render with Motion Transitions */}
+      <main style={{ flex: 1 }}>
+        <AnimatePresence mode="wait">
+          {activeTab === 'home' && (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <LandingPage
+                doctors={doctors}
+                currentUser={currentUser}
+                onOpenAuth={() => setIsAuthModalOpen(true)}
+                onSelectDoctorForBooking={(doc) => {
+                  if (!currentUser) setIsAuthModalOpen(true);
+                  else setSelectedDoctorForBooking(doc);
+                }}
+                onOpenChat={() => setIsChatOpen(true)}
+                onOpenParchaReader={() => setActiveTab('ai_parcha')}
+                appointments={appointments}
+                onLoginSuccess={handleLoginSuccess}
+              />
+            </motion.div>
+          )}
 
-            <div className="glass-panel" style={{ padding: '30px', background: '#ffffff' }}>
-              <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb' }}>
-                <ShieldCheck color="#2563eb" size={20} /> MediCare Dual Portals
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 800 }}>👤</span>
-                  <div><strong>Patient Portal:</strong> Mobile OTP / Google Login, AI Symptom Chat, instant appointment booking.</div>
-                </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 800 }}>👨‍⚕️</span>
-                  <div><strong>Doctor Dashboard:</strong> View queue, manage slots, and review AI Pre-Consultation Summaries.</div>
-                </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <span style={{ color: '#2563eb', fontWeight: 800 }}>🚨</span>
-                  <div><strong>Emergency Filter:</strong> Real-time detection of high-risk medical emergencies.</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {activeTab === 'patient' && (
+            <motion.div
+              key="patient"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <PatientPortal
+                appointments={appointments}
+                currentUser={currentUser}
+                onSelectDoctorForBooking={(doc) => setSelectedDoctorForBooking(doc)}
+                doctors={doctors}
+              />
+            </motion.div>
+          )}
 
-          <div id="doctors-section" style={{ marginTop: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>Find Verified <span style={{ color: '#2563eb' }}>Doctors</span></h2>
-                {selectedSpecialist && (
-                  <span style={{ fontSize: '0.88rem', color: 'var(--secondary-accent)' }}>
-                    Filtered for recommended specialist: <strong>{selectedSpecialist}</strong> {' '}
-                    <button onClick={() => setSelectedSpecialist('')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.8rem' }}>(Clear Filter)</button>
-                  </span>
-                )}
-              </div>
+          {activeTab === 'doctor' && currentUser?.role === 'doctor' && (
+            <motion.div
+              key="doctor"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DoctorDashboard
+                appointments={appointments}
+                currentUser={currentUser}
+                setAppointments={setAppointments}
+                doctors={doctors}
+              />
+            </motion.div>
+          )}
 
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <div style={{ position: 'relative' }}>
-                  <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-                  <input
-                    type="text"
-                    className="chat-input"
-                    style={{ paddingLeft: '36px', width: '240px' }}
-                    placeholder="Search doctor or specialty..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
+          {activeTab === 'ai_parcha' && (
+            <motion.div
+              key="ai_parcha"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ParchaReaderView
+                onBackToHome={() => setActiveTab('home')}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
 
-            <div className="doctors-grid">
-              {filteredDoctors.map(doc => (
-                <DoctorCard key={doc.id} doctor={doc} onBook={d => setSelectedDoctorForBooking(d)} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'patient' && <PatientDashboard appointments={appointments} />}
-      {activeTab === 'doctor' && <DoctorDashboard appointments={appointments} />}
-
-      {/* Floating AI Chat Launcher */}
+      {/* 3. Floating AI Chat Launcher Button (if drawer not active) */}
       {!isChatOpen && (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.06, boxShadow: '0 12px 32px rgba(37,99,235,0.45)' }}
+          whileTap={{ scale: 0.94 }}
           onClick={() => setIsChatOpen(true)}
-          className="btn-primary"
-          style={{ position: 'fixed', bottom: '30px', right: '30px', borderRadius: '30px', padding: '14px 22px', boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)', zIndex: 150 }}
+          style={{
+            position: 'fixed',
+            bottom: '26px',
+            right: '26px',
+            borderRadius: '30px',
+            padding: '13px 20px',
+            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+            color: '#ffffff',
+            border: 'none',
+            boxShadow: '0 8px 24px rgba(37, 99, 235, 0.35)',
+            zIndex: 150,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontWeight: 800,
+            fontSize: '0.9rem',
+            cursor: 'pointer'
+          }}
         >
-          <Bot size={22} /> Ask AI Health Assistant
-        </button>
+          <Bot size={20} />
+          <span>Ask AI Health Assistant</span>
+        </motion.button>
       )}
 
-      {/* Chat Drawer */}
+      {/* 4. AI Chatbot Drawer */}
       {isChatOpen && (
-        <ChatbotDrawer onClose={() => setIsChatOpen(false)} onRecommendSpecialist={handleRecommendSpecialist} />
+        <ChatbotDrawer
+          onClose={() => setIsChatOpen(false)}
+          onRecommendSpecialist={() => {
+            setIsChatOpen(false);
+            setActiveTab('home');
+          }}
+        />
       )}
 
-      {/* Booking Modal */}
+      {/* 5. Appointment Booking Modal */}
       {selectedDoctorForBooking && (
-        <AppointmentModal doctor={selectedDoctorForBooking} onClose={() => setSelectedDoctorForBooking(null)} onBookingSuccess={handleBookingSuccess} />
+        <AppointmentModal
+          doctor={selectedDoctorForBooking}
+          appointments={appointments}
+          onClose={() => setSelectedDoctorForBooking(null)}
+          onBookingSuccess={handleBookingSuccess}
+        />
       )}
 
-      <footer style={{ marginTop: 'auto', padding: '24px 40px', borderTop: '1px solid var(--card-border)', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', background: '#ffffff' }}>
-        © 2026 MediCare. All rights reserved.
+      {/* 6. Auth Modal Overlay */}
+      {isAuthModalOpen && (
+        <AuthModal
+          onLoginSuccess={handleLoginSuccess}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
+      )}
+
+      {/* 7. Footer */}
+      <footer style={{
+        marginTop: 'auto',
+        padding: '20px 36px',
+        borderTop: '1px solid #e2e8f0',
+        textAlign: 'center',
+        fontSize: '0.82rem',
+        color: '#64748b',
+        background: '#ffffff'
+      }}>
+        © 2026 MediCare - Smart AI Healthcare & Patient Appointment System • Gwalior Special Edition.
       </footer>
     </div>
   );

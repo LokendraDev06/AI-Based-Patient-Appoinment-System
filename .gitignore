@@ -45,4 +45,10 @@ frontend/dist/
 backend/.env
 client_secret*.json
 credentials*.json
+.agents/mcp_config.json
+mcp_config.json
+
+
+.agents/
+skills-lock.json
 
