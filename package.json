@@ -1,0 +1,11 @@
+{
+  "name": "ai-patient-appointment-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Powered Patient Appointment System for OPD Hospitals",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "preview": "npm --prefix frontend run preview"
+  }
+}
