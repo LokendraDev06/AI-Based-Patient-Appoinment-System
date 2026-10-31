@@ -1,7 +1,6 @@
 {
-  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
-  "outputDirectory": "frontend/dist",
-  "framework": "vite",
+  "buildCommand": "node build-static.js",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -9,4 +8,3 @@
     }
   ]
 }
-
